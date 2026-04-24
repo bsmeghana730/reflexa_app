@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Sanctuary | Meditation & Wellness</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- HOME SCREEN -->
+        <div id="home-screen" class="screen active">
+            <header class="app-header">
+                <button class="icon-btn"><i class="fa-solid fa-arrow-left"></i></button>
+                <h1 class="brand-title">The Sanctuary</h1>
+                <button class="icon-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+            </header>
+
+            <main class="home-main">
+                <section class="welcome-section">
+                    <h2 class="main-title">Meditation</h2>
+                    <p class="subtitle">Find your inner calm</p>
+                </section>
+
+                <div class="meditation-grid">
+                    <!-- Cards will be populated here -->
+                </div>
+
+                <div class="quote-card">
+                    <i class="fa-solid fa-quote-left"></i>
+                    <p class="quote-text">"Quiet the mind, and the soul will speak."</p>
+                    <span class="quote-author">MA JAYA SATI BHAGAVATI</span>
+                </div>
+            </main>
+        </div>
+
+        <!-- SESSION SCREEN -->
+        <div id="session-screen" class="screen">
+            <header class="session-header">
+                <button class="icon-btn back-to-home"><i class="fa-solid fa-arrow-left"></i></button>
+                <h1 class="brand-title">The Sanctuary</h1>
+                <button class="icon-btn"><i class="fa-solid fa-microphone"></i></button>
+            </header>
+
+            <main class="session-main">
+                <div class="phase-info">
+                    <span class="phase-tag">PHASE <span id="current-phase">01</span></span>
+                    <h2 id="session-status" class="session-title">Breathe In...</h2>
+                    <p id="instruction-text" class="session-sub">Let the air fill your chest. Focus on the gentle expansion of the circle.</p>
+                </div>
+
+                <div class="breathing-container">
+                    <div class="pulse-outer"></div>
+                    <div class="pulse-inner"></div>
+                    <div id="breathing-circle" class="breathing-circle">
+                        <div class="timer-display">
+                            <span id="seconds-count">04</span>
+                            <small>SECONDS</small>
+                        </div>
+                    </div>
+
+                    <div class="heart-rate-card">
+                        <div class="hr-icon">
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                        <div class="hr-data">
+                            <span class="hr-label">HEART RATE</span>
+                            <span class="hr-value">68 BPM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="session-progress">
+                    <div class="progress-labels">
+                        <span>Progress</span>
+                        <span>8 of 15 min</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-fill" style="width: 53.3%;"></div>
+                    </div>
+                </div>
+
+                <div class="session-controls">
+                    <button class="control-btn small-btn reset-btn"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="control-btn primary-btn play-pause-btn"><i class="fa-solid fa-pause"></i></button>
+                    <button class="control-btn small-btn next-btn"><i class="fa-solid fa-forward-step"></i></button>
+                </div>
+            </main>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-house"></i>
+                <span>HOME</span>
+            </a>
+            <a href="#" class="nav-item active">
+                <i class="fa-solid fa-leaf"></i>
+                <span>SESSIONS</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-dumbbell"></i>
+                <span>EXERCISES</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fa-solid fa-user"></i>
+                <span>PROFILE</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- AUDIO ELEMENTS -->
+    <!-- Placeholder Audio URLs -->
+    <audio id="bg-audio" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{% extends 'rehab/base.html' %}
+
+{% block title %}Request Sent - Reflexa{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px; margin: 4rem auto; text-align: center;">
+    <div style="width: 64px; height: 64px; background: #d1fae5; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <h1>Request Sent Successfully!</h1>
+    <p style="color: var(--text-sub); margin: 1rem 0 2rem;">
+        Your request has been sent to the therapist. You will appear in their dashboard once they approve your application.
+    </p>
+    <a href="{% url 'patient_request' %}" class="btn btn-outline">Back to Portal</a>
+</div>
+{% endblock %}

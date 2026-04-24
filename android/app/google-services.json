@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "414157179833",
+    "project_id": "reflexa-app",
+    "storage_bucket": "reflexa-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414157179833:android:b1e33b6e443b2519f14468",
+        "android_client_info": {
+          "package_name": "com.example.reflexa_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD49vXXP15Bk1p8u0tuPxQl4VQZ_UnUYEk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

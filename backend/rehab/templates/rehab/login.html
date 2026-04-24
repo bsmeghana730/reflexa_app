@@ -1,0 +1,36 @@
+{% extends 'rehab/base.html' %}
+
+{% block title %}Log In - Reflexa Therapy{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 4rem auto;">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Welcome Back</h3>
+        </div>
+        <form method="POST" style="padding: 2rem;">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                <div style="color: var(--danger); font-size: 0.75rem; margin-top: 0.25rem;">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <div style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem;">Log In</button>
+            </div>
+            
+            <p style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem;">
+                Don't have an account? <a href="{% url 'signup' %}" style="color: var(--primary); font-weight: 600;">Sign Up</a>
+            </p>
+        </form>
+    </div>
+</div>
+{% endblock %}

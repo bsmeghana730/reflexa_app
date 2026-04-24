@@ -1,0 +1,490 @@
+:root {
+    --primary: #006C55;
+    --primary-light: #98FFD9;
+    --accent: #6750A4;
+    --lavender: #E3D5FF;
+    --sky: #D5E8FF;
+    --mint: #CAFFEB;
+    --glass: rgba(255, 255, 255, 0.15);
+    --glass-heavy: rgba(255, 255, 255, 0.25);
+    --white: #FDFBFF;
+    --text-main: #191C1B;
+    --transition: all 0.3s ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Manrope', sans-serif;
+    color: var(--text-main);
+    background-color: #000;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    max-width: 450px;
+    height: 100vh;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 0 100px rgba(0,0,0,0.5);
+    overflow: hidden;
+    background-color: #f0f0f0;
+}
+
+/* Base Screen Style */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    padding: 20px 24px 100px 24px;
+    background-size: cover;
+    background-position: center;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.screen.active {
+    display: flex;
+    z-index: 10;
+}
+
+#home-screen {
+    background-image: url('assets/home_bg.png');
+}
+
+#session-screen {
+    background-image: url('assets/session_bg.png');
+    color: white;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+}
+
+.brand-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+#session-screen .brand-title {
+    color: white;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 20px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Home Welcome */
+.welcome-section {
+    margin: 32px 0;
+}
+
+.main-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: rgba(25, 28, 27, 0.85);
+}
+
+.subtitle {
+    font-size: 16px;
+    color: rgba(25, 28, 27, 0.5);
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+/* Meditation Grid */
+.meditation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.meditation-card {
+    background: var(--glass);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 28px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.meditation-card:hover {
+    background: var(--glass-heavy);
+    transform: translateY(-5px);
+}
+
+.card-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 24px;
+    color: rgba(0,0,0,0.6);
+}
+
+.meditation-card h3 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    color: rgba(25, 28, 27, 0.8);
+}
+
+.meditation-card p {
+    font-size: 12px;
+    color: rgba(25, 28, 27, 0.5);
+    font-weight: 600;
+}
+
+.card-play {
+    align-self: flex-end;
+    margin-top: 10px;
+    color: var(--primary);
+    opacity: 0.6;
+}
+
+/* Quote Card */
+.quote-card {
+    background: var(--glass);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 28px;
+    padding: 24px;
+    margin-top: auto;
+}
+
+.quote-card i {
+    color: var(--primary);
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.quote-text {
+    font-style: italic;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.quote-author {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: rgba(0, 108, 85, 0.5);
+}
+
+/* Session Header/Phase */
+.phase-info {
+    text-align: center;
+    margin: 40px 0;
+}
+
+.phase-tag {
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--primary-light);
+    opacity: 0.8;
+}
+
+.session-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    margin: 12px 0;
+}
+
+.session-sub {
+    font-size: 14px;
+    opacity: 0.6;
+    max-width: 250px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Breathing Container */
+.breathing-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 40px 0;
+}
+
+.breathing-circle {
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle at 30% 30%, var(--primary-light), var(--primary));
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: transform 4s linear;
+    box-shadow: 0 0 50px rgba(0, 108, 85, 0.4);
+}
+
+.breathing-circle.inhale {
+    transform: scale(1.4);
+}
+
+.breathing-circle.exhale {
+    transform: scale(1.0);
+}
+
+.timer-display {
+    text-align: center;
+}
+
+#seconds-count {
+    display: block;
+    font-size: 64px;
+    font-weight: 800;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.timer-display small {
+    display: block;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    opacity: 0.7;
+}
+
+.pulse-outer, .pulse-inner {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(152, 255, 217, 0.2);
+    z-index: 1;
+}
+
+.pulse-outer {
+    width: 320px;
+    height: 320px;
+    animation: pulse 8s infinite ease-in-out;
+}
+
+.pulse-inner {
+    width: 280px;
+    height: 280px;
+    animation: pulse 8s infinite ease-in-out reverse;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.9); opacity: 0.3; }
+    50% { transform: scale(1.1); opacity: 0.6; }
+    100% { transform: scale(0.9); opacity: 0.3; }
+}
+
+/* Heart Rate Card */
+.heart-rate-card {
+    position: absolute;
+    bottom: 20px;
+    right: -10px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    color: #191C1B;
+    z-index: 10;
+}
+
+.hr-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--lavender);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6750A4;
+    animation: heartBeat 1.2s infinite;
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    15% { transform: scale(1.15); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.15); }
+    60% { transform: scale(1); }
+}
+
+.hr-label {
+    display: block;
+    font-size: 9px;
+    font-weight: 900;
+    color: #666;
+    letter-spacing: 1px;
+}
+
+.hr-value {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+/* Progress */
+.session-progress {
+    margin: 20px 0 40px 0;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.progress-bar-bg {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-light);
+    border-radius: 4px;
+    transition: width 1s linear;
+}
+
+/* Controls */
+.session-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+}
+
+.control-btn {
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.primary-btn {
+    width: 80px;
+    height: 80px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 28px;
+}
+
+.small-btn {
+    width: 56px;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 50%;
+    font-size: 20px;
+}
+
+.control-btn:hover {
+    transform: scale(1.05);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+/* Bottom Nav */
+.bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 10px 10px 10px;
+    z-index: 100;
+    border-radius: 36px 36px 0 0;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    color: rgba(0,0,0,0.3);
+    transition: var(--transition);
+}
+
+.nav-item.active {
+    color: var(--primary);
+    background: var(--primary-light);
+    padding: 12px 24px;
+    border-radius: 24px;
+}
+
+.nav-item i {
+    font-size: 20px;
+}
+
+.nav-item span {
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.nav-item.active i {
+    color: var(--primary);
+}

@@ -1,0 +1,140 @@
+{% extends 'rehab/base.html' %}
+
+{% block title %}Therapist Dashboard - Reflexa{% endblock %}
+
+{% block content %}
+<div class="dashboard-header" style="margin-bottom: 2rem;">
+    <h1>Therapist Dashboard</h1>
+    <p style="color: var(--text-sub);">Welcome back, Dr. {{ therapist.username }}</p>
+</div>
+
+<div class="grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <!-- Patients List -->
+    <div class="section">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Assigned Patients</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Age</th>
+                        <th>Condition</th>
+                        <th>Avg. Accuracy</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td style="font-weight: 500;">{{ patient.user.username }}</td>
+                        <td>{{ patient.profile.age }}</td>
+                        <td>{{ patient.profile.medical_condition|truncatechars:30 }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 60px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                    <div class="progress-fill" data-width="{{ patient.avg_accuracy|default:0 }}" style="height: 100%; background: var(--success); transition: width 0.6s ease;"></div>
+                                </div>
+                                {{ patient.avg_accuracy }}%
+                            </div>
+                        </td>
+                        <td>
+                            {% if patient.latest_result %}
+                                <span class="badge badge-success">Correct</span>
+                            {% else %}
+                                <span class="badge badge-pending">No Data</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="#" class="btn btn-outline" style="padding: 0.25rem 0.5rem;">View History</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-sub); padding: 2rem;">No patients assigned yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Session History</h3>
+            </div>
+            <div style="padding: 1.5rem;">
+                <p style="color: var(--text-sub); font-size: 0.875rem;">Recent activity from your patients:</p>
+                <div style="margin-top: 1rem;">
+                    {% for patient in patients %}
+                        {% if patient.latest_result %}
+                        <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+                            <div>
+                                <div style="font-weight: 500;">{{ patient.user.username }} completed {{ patient.latest_result.exercise.name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-sub);">{{ patient.latest_result.date|date:"F j, Y, g:i a" }}</div>
+                            </div>
+                            <div style="font-weight: 600; color: var(--primary);">{{ patient.latest_result.accuracy }}% Accuracy</div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Requests -->
+    <div class="section">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Patient Requests</h3>
+                <span class="badge badge-pending">{{ requests.count }} New</span>
+            </div>
+            <div style="padding: 1rem;">
+                {% for req in requests %}
+                <div style="padding: 1rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; background: var(--bg);">
+                    <div style="font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem;">{{ req.name }}</div>
+                    <div style="font-size: 0.8125rem; color: var(--text-sub); margin-bottom: 0.75rem;">
+                        {{ req.age }} years • {{ req.injury_type|truncatechars:50 }}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="{% url 'approve_request' req.id %}" class="btn btn-success" style="flex: 1;">Approve</a>
+                        <a href="{% url 'reject_request' req.id %}" class="btn btn-danger" style="flex: 1;">Reject</a>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="text-align: center; color: var(--text-sub); padding: 1rem;">No pending requests.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card" style="background: var(--primary); color: white; border: none;">
+            <div style="padding: 1.5rem;">
+                <h3 style="margin-bottom: 0.5rem;">Quick Stats</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;">Total Patients</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">{{ patients|length }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;">Waitlist</div>
+                        <div style="font-size: 1.5rem; font-weight: 700;">{{ requests.count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const bars = document.querySelectorAll('.progress-fill');
+        bars.forEach(bar => {
+            const width = bar.getAttribute('data-width');
+            bar.style.width = width + '%';
+        });
+    });
+</script>
+{% endblock %}
