@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:reflexa_app/features/auth/presentation/login_screen.dart';
+import 'package:reflexa_app/features/auth/presentation/welcome_screen.dart';
 import 'package:reflexa_app/features/dashboard/patient_dashboard.dart';
+import 'package:reflexa_app/features/dashboard/therapist_dashboard.dart';
 import 'package:reflexa_app/core/services/storage_service.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -25,15 +26,15 @@ class _SplashScreenState extends State<SplashScreen> {
     // First, check local storage flag
     final isPersistentLoggedIn = StorageService().isLoggedIn();
     if (!isPersistentLoggedIn) {
-      debugPrint('SplashScreen: Persistent login flag is false, going to login.');
-      _goToLogin();
+      debugPrint('SplashScreen: Persistent login flag is false, going to welcome screen.');
+      _goToWelcome();
       return;
     }
 
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      debugPrint('SplashScreen: User session not found in Firebase, going to login.');
-      _goToLogin();
+      debugPrint('SplashScreen: User session not found in Firebase, going to welcome screen.');
+      _goToWelcome();
       return;
     }
 
@@ -46,7 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (!doc.exists) {
         debugPrint('SplashScreen: User document does not exist.');
-        _goToLogin();
+        _goToWelcome();
         return;
       }
 
@@ -62,24 +63,29 @@ class _SplashScreenState extends State<SplashScreen> {
             context,
             MaterialPageRoute(builder: (_) => const PatientDashboard()),
           );
+        } else if (role == 'therapist') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const TherapistDashboard()),
+          );
         } else {
-          _goToLogin();
+          _goToWelcome();
         }
       });
     } catch (e) {
       debugPrint('SplashScreen: Error during session check: $e');
       if (!mounted) return;
-      _goToLogin();
+      _goToWelcome();
     }
   }
 
-  void _goToLogin() {
+  void _goToWelcome() {
     if (!mounted) return;
-    debugPrint('SplashScreen: Navigating to LoginScreen');
+    debugPrint('SplashScreen: Navigating to WelcomeScreen');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(builder: (_) => const WelcomeScreen()),
       );
     });
   }

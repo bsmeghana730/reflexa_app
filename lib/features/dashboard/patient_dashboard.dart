@@ -12,6 +12,7 @@ import 'package:reflexa_app/features/therapy/presentation/exercise_list_screen.d
 import 'package:reflexa_app/features/therapy/presentation/todays_session_screen.dart';
 import 'package:reflexa_app/features/nutrition/presentation/meal_plan_screen.dart';
 import 'package:reflexa_app/features/progress/presentation/patient_progress_screen.dart';
+import 'package:reflexa_app/features/therapy/presentation/therapist_list_screen.dart';
 import 'package:reflexa_app/features/wellness/presentation/meditation_screen.dart';
 import 'package:reflexa_app/core/services/bluetooth_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
@@ -149,6 +150,8 @@ class _PatientDashboardState extends State<PatientDashboard> {
             _buildBannerCarousel(),
             const SizedBox(height: 12),
             _buildDotIndicators(),
+            const SizedBox(height: 24),
+            _buildTherapistSection(),
             const SizedBox(height: 24),
             _buildFeatureGrid(),
             const SizedBox(height: 100),
@@ -375,6 +378,51 @@ class _PatientDashboardState extends State<PatientDashboard> {
           color: _carouselIndex == index ? primaryColor : Colors.grey.shade300,
         ),
       )),
+    );
+  }
+
+  Widget _buildTherapistSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2FAF6),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE8E8E8)),
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 24,
+              backgroundColor: Colors.white,
+              child: Icon(Icons.medical_services_outlined, color: primaryColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Need a Therapist?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16)),
+                  Text('Find an expert for your recovery', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey.shade600)),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => TherapistListScreen(onBack: () => Navigator.pop(context))));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                elevation: 0,
+              ),
+              child: const Text('Find'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

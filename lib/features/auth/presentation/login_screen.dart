@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:reflexa_app/features/auth/presentation/signup_screen.dart';
 import 'package:reflexa_app/features/dashboard/patient_dashboard.dart';
+import 'package:reflexa_app/features/dashboard/therapist_dashboard.dart';
 import 'package:reflexa_app/core/services/storage_service.dart';
 import 'package:animate_do/animate_do.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? initialRole;
+  const LoginScreen({super.key, this.initialRole});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -47,9 +49,16 @@ class _LoginScreenState extends State<LoginScreen> {
         _showError('Profile not found.');
         return;
       }
+      final role = userDoc.data()?['role']?.toString().toLowerCase();
+      
       await StorageService().setLoggedIn(true);
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PatientDashboard()));
+
+      if (role == 'therapist') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const TherapistDashboard()));
+      } else {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PatientDashboard()));
+      }
     } on FirebaseAuthException catch (e) {
       _showError('Invalid credentials');
     } catch (_) {
@@ -174,7 +183,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text("Don't have an account?", style: GoogleFonts.inter(color: textSecondary, fontSize: 14)),
                           TextButton(
-                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen())),
+                            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SignupScreen(initialRole: widget.initialRole))),
                             child: Text("Sign Up", style: GoogleFonts.inter(color: primaryGreen, fontWeight: FontWeight.w800, fontSize: 14)),
                           ),
                         ],

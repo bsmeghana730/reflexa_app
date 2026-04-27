@@ -3,11 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:reflexa_app/features/dashboard/patient_dashboard.dart';
+import 'package:reflexa_app/features/dashboard/therapist_dashboard.dart';
 import 'package:reflexa_app/core/services/storage_service.dart';
 import 'package:animate_do/animate_do.dart';
 
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({super.key});
+  final String? initialRole;
+  const SignupScreen({super.key, this.initialRole});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -32,7 +34,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final Color borderColor = const Color(0xFFEEEEEE);
   final Color iconColor = const Color(0xFF1A1A1A);
 
-  String _selectedRole = 'Patient';
+  late String _selectedRole;
   String _selectedCountry = 'India';
   String _selectedGender = 'Male';
   String _selectedExperience = '1-3 Years';
@@ -41,6 +43,12 @@ class _SignupScreenState extends State<SignupScreen> {
   
   bool _obscurePassword = true;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedRole = widget.initialRole ?? 'Patient';
+  }
 
   final List<String> _countries = ['India', 'USA', 'UK', 'Canada', 'Australia'];
   final List<String> _genders = ['Male', 'Female', 'Other'];
@@ -88,7 +96,11 @@ class _SignupScreenState extends State<SignupScreen> {
       await FirebaseFirestore.instance.collection('users').doc(credential.user!.uid).set(userData);
       await StorageService().setLoggedIn(true);
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PatientDashboard()));
+      if (_selectedRole == 'Therapist') {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const TherapistDashboard()));
+      } else {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const PatientDashboard()));
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {

@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:reflexa_app/features/auth/presentation/login_screen.dart';
+import 'package:reflexa_app/features/auth/presentation/welcome_screen.dart';
 import 'package:reflexa_app/features/dashboard/patient_dashboard.dart';
+import 'package:reflexa_app/features/dashboard/therapist_dashboard.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -31,7 +33,7 @@ class _AuthGateState extends State<AuthGate> {
 
         final user = snapshot.data;
         if (user == null) {
-          return const LoginScreen();
+          return const WelcomeScreen();
         }
 
         _roleFuture ??= _fetchRole(user.uid);
@@ -45,6 +47,8 @@ class _AuthGateState extends State<AuthGate> {
             final role = roleSnapshot.data;
             if (role == 'patient') {
               return const PatientDashboard();
+            } else if (role == 'therapist') {
+              return const TherapistDashboard();
             }
 
             return _AuthError(
