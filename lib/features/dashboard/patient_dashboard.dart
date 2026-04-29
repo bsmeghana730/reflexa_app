@@ -382,46 +382,130 @@ class _PatientDashboardState extends State<PatientDashboard> {
   }
 
   Widget _buildTherapistSection() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF2FAF6),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE8E8E8)),
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.white,
-              child: Icon(Icons.medical_services_outlined, color: primaryColor),
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('connections')
+            .where('patientId', isEqualTo: user.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+          if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox.shrink();
+
+          final connections = snapshot.data?.docs ?? [];
+          final acceptedConn = connections.firstWhere((doc) => (doc.data() as Map<String, dynamic>)['status'] == 'accepted', orElse: () => connections.isNotEmpty ? connections.first : null as dynamic);
+
+          if (acceptedConn == null) {
+            return _buildNoTherapistCard();
+          }
+
+          final connData = acceptedConn.data() as Map<String, dynamic>;
+          final status = connData['status'];
+          final therapistId = connData['therapistId'];
+
+          return FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance.collection('users').doc(therapistId).get(),
+            builder: (context, userSnapshot) {
+              if (!userSnapshot.hasData) return const SizedBox.shrink();
+              final therapistData = userSnapshot.data!.data() as Map<String, dynamic>;
+              final name = therapistData['fullName'] ?? 'Your Therapist';
+              final specialty = therapistData['specialist'] ?? 'Specialist';
+
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: status == 'accepted' ? const Color(0xFFEFFBF5) : const Color(0xFFFFF9EB),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: const Color(0xFFE8E8E8)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundColor: Colors.white,
+                      child: Icon(status == 'accepted' ? Icons.check_circle : Icons.hourglass_empty, color: primaryColor),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            status == 'accepted' ? 'My Therapist' : 'Connection Pending',
+                            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16),
+                          ),
+                          Text(
+                            status == 'accepted' ? '$name • $specialty' : 'Waiting for $name to accept',
+                            style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (status != 'accepted')
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => TherapistListScreen(onBack: () => Navigator.pop(context))));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        child: const Text('Change'),
+                      ),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNoTherapistCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2FAF6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE8E8E8)),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.medical_services_outlined, color: primaryColor),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Need a Therapist?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16)),
+                Text('Find an expert for your recovery', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey.shade600)),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Need a Therapist?', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 16)),
-                  Text('Find an expert for your recovery', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey.shade600)),
-                ],
-              ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => TherapistListScreen(onBack: () => Navigator.pop(context))));
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
             ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => TherapistListScreen(onBack: () => Navigator.pop(context))));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: const Text('Find'),
-            ),
-          ],
-        ),
+            child: const Text('Find'),
+          ),
+        ],
       ),
     );
   }

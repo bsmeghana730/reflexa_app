@@ -122,33 +122,71 @@ class _TherapistDashboardState extends State<TherapistDashboard> {
   }
 
   Widget _buildRecentActivity() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return const SizedBox.shrink();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('Active Cases', style: GoogleFonts.plusJakartaSans(fontSize: 18, fontWeight: FontWeight.w800)),
         const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: borderColor),
-          ),
-          child: Row(
-            children: [
-              const CircleAvatar(backgroundColor: Color(0xFFEFFBF5), child: Icon(Icons.person, color: primaryColor)),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('John Doe', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-                  Text('Post-stroke Recovery', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey)),
-                ],
-              ),
-              const Spacer(),
-              const Icon(Icons.chevron_right, color: Colors.grey),
-            ],
-          ),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('connections')
+              .where('therapistId', isEqualTo: currentUser.uid)
+              .where('status', isEqualTo: 'accepted')
+              .limit(5)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+            if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+
+            final activeCases = snapshot.data?.docs ?? [];
+
+            if (activeCases.isEmpty) {
+              return Text('No active cases', style: GoogleFonts.manrope(color: Colors.grey));
+            }
+
+            return Column(
+              children: activeCases.map((doc) {
+                final patientId = (doc.data() as Map<String, dynamic>)['patientId'];
+                return FutureBuilder<DocumentSnapshot>(
+                  future: FirebaseFirestore.instance.collection('users').doc(patientId).get(),
+                  builder: (context, userSnapshot) {
+                    if (!userSnapshot.hasData) return const SizedBox.shrink();
+                    final patientData = userSnapshot.data!.data() as Map<String, dynamic>;
+                    final name = patientData['fullName'] ?? 'Unknown';
+                    final disability = patientData['disabilities'] ?? 'General Recovery';
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(backgroundColor: Color(0xFFEFFBF5), child: Icon(Icons.person, color: primaryColor)),
+                          const SizedBox(width: 16),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                              Text(disability, style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey)),
+                            ],
+                          ),
+                          const Spacer(),
+                          const Icon(Icons.chevron_right, color: Colors.grey),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            );
+          },
         ),
       ],
     );
@@ -156,62 +194,196 @@ class _TherapistDashboardState extends State<TherapistDashboard> {
 
   // --- REQUESTS TAB ---
   Widget _buildRequests() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return const Center(child: Text('Please log in'));
+
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(title: Text('Patient Requests', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: Colors.black87)), backgroundColor: Colors.white, elevation: 0),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: 2,
-        itemBuilder: (context, idx) => FadeInLeft(
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: borderColor)),
-            child: Row(
-              children: [
-                const CircleAvatar(child: Icon(Icons.person)),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Alice Smith', style: GoogleFonts.manrope(fontWeight: FontWeight.bold)),
-                    Text('ACL Tear | Chennai, IN', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey)),
-                  ]),
-                ),
-                TextButton(onPressed: () {}, child: Text('Accept', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold))),
-                TextButton(onPressed: () {}, child: const Text('Reject', style: TextStyle(color: Colors.redAccent))),
-              ],
-            ),
-          ),
-        ),
+      appBar: AppBar(
+        title: Text('Patient Requests', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('connections')
+            .where('therapistId', isEqualTo: currentUser.uid)
+            .where('status', isEqualTo: 'pending')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+
+          final requests = snapshot.data?.docs ?? [];
+
+          if (requests.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.person_add_disabled_outlined, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text('No pending requests', style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade600)),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: requests.length,
+            itemBuilder: (context, idx) {
+              final connDoc = requests[idx];
+              final connData = connDoc.data() as Map<String, dynamic>;
+              final patientId = connData['patientId'];
+
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance.collection('users').doc(patientId).get(),
+                builder: (context, userSnapshot) {
+                  if (!userSnapshot.hasData) return const SizedBox.shrink();
+                  final patientData = userSnapshot.data!.data() as Map<String, dynamic>;
+                  final name = patientData['fullName'] ?? 'Unknown';
+                  final disability = patientData['disabilities'] ?? 'None';
+                  final location = patientData['country'] ?? 'Unknown';
+
+                  return FadeInLeft(
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: borderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(child: Icon(Icons.person)),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(name, style: GoogleFonts.manrope(fontWeight: FontWeight.bold)),
+                                Text('$disability | $location', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => _handleRequest(connDoc.id, 'accepted'),
+                            child: const Text('Accept', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                          ),
+                          TextButton(
+                            onPressed: () => _handleRequest(connDoc.id, 'rejected'),
+                            child: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
 
+  Future<void> _handleRequest(String connId, String status) async {
+    try {
+      await FirebaseFirestore.instance.collection('connections').doc(connId).update({
+        'status': status,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Request $status!')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
   // --- PATIENTS TAB ---
   Widget _buildPatients() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return const Center(child: Text('Please log in'));
+
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(title: Text('My Patients', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: Colors.black87)), backgroundColor: Colors.white, elevation: 0),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(20),
-        itemCount: 3,
-        itemBuilder: (context, idx) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), border: Border.all(color: borderColor)),
-          child: Row(
-            children: [
-              const CircleAvatar(backgroundColor: primaryColor, child: Icon(Icons.person, color: Colors.white)),
-              const SizedBox(width: 16),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Patient Unit $idx', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
-                Text('Daily Rehab • 4 exercises', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey)),
-              ]),
-              const Spacer(),
-              const Icon(Icons.chat_bubble_outline, size: 20, color: primaryColor),
-            ],
-          ),
-        ),
+      appBar: AppBar(
+        title: Text('My Patients', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('connections')
+            .where('therapistId', isEqualTo: currentUser.uid)
+            .where('status', isEqualTo: 'accepted')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+
+          final patients = snapshot.data?.docs ?? [];
+
+          if (patients.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.people_outline, size: 64, color: Colors.grey.shade400),
+                  const SizedBox(height: 16),
+                  Text('No patients yet', style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade600)),
+                ],
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: patients.length,
+            itemBuilder: (context, idx) {
+              final patientId = (patients[idx].data() as Map<String, dynamic>)['patientId'];
+
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance.collection('users').doc(patientId).get(),
+                builder: (context, userSnapshot) {
+                  if (!userSnapshot.hasData) return const SizedBox.shrink();
+                  final patientData = userSnapshot.data!.data() as Map<String, dynamic>;
+                  final name = patientData['fullName'] ?? 'Unknown';
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(backgroundColor: primaryColor, child: Icon(Icons.person, color: Colors.white)),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(name, style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700)),
+                            Text('Daily Rehab • Active', style: GoogleFonts.manrope(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                        const Spacer(),
+                        const Icon(Icons.chat_bubble_outline, size: 20, color: primaryColor),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(onPressed: () {}, backgroundColor: primaryColor, child: const Icon(Icons.add)),
     );
@@ -219,15 +391,47 @@ class _TherapistDashboardState extends State<TherapistDashboard> {
 
   // --- TRACKING TAB ---
   Widget _buildTracking() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return const Center(child: Text('Please log in'));
+
     return Scaffold(
       backgroundColor: bgColor,
-      appBar: AppBar(title: Text('Patient Tracking', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: Colors.black87)), backgroundColor: Colors.white, elevation: 0),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          _trackCard('John Doe', '80%', 'Completed 4/5 sessions'),
-          _trackCard('Alice Smith', '45%', 'Goal: Mobility Improvement'),
-        ],
+      appBar: AppBar(
+        title: Text('Patient Tracking', style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, color: Colors.black87)),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('connections')
+            .where('therapistId', isEqualTo: currentUser.uid)
+            .where('status', isEqualTo: 'accepted')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+
+          final patients = snapshot.data?.docs ?? [];
+
+          if (patients.isEmpty) return Center(child: Text('No patients to track', style: GoogleFonts.plusJakartaSans(color: Colors.grey.shade600)));
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(24),
+            itemCount: patients.length,
+            itemBuilder: (context, idx) {
+              final patientId = (patients[idx].data() as Map<String, dynamic>)['patientId'];
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance.collection('users').doc(patientId).get(),
+                builder: (context, userSnapshot) {
+                  if (!userSnapshot.hasData) return const SizedBox.shrink();
+                  final patientData = userSnapshot.data!.data() as Map<String, dynamic>;
+                  final name = patientData['fullName'] ?? 'Unknown';
+                  return _trackCard(name, '0%', 'No sessions recorded yet');
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
