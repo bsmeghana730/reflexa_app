@@ -25,6 +25,8 @@ class ApiService {
     }
   ];
 
+  static List<dynamic> localRequestedExercises = [];
+
   /// Helper to try all possible hosts for a given request.
   /// If [discoveryOnly] is true, it just finds a working host and returns its URL.
   static Future<http.Response> _tryRequest(String path, {String method = 'GET', Map<String, dynamic>? body}) async {
@@ -72,11 +74,43 @@ class ApiService {
     }
   }
 
-  static Future<void> requestExercise(int patientId, int exerciseId) async {
-    await _tryRequest('/assignments/request_exercise/', method: 'POST', body: {
-      'patient_id': patientId,
-      'exercise_id': exerciseId,
-    });
+  static Future<List<dynamic>> getRequestedExercises() async {
+    try {
+      final response = await _tryRequest('/assignments/');
+      List<dynamic> all = json.decode(response.body);
+      return all.where((a) => a['status'] == 'PENDING').toList();
+    } catch (_) {
+      return localRequestedExercises;
+    }
+  }
+
+  static Future<void> requestExercise(int patientId, int exerciseId, {Map<String, dynamic>? localFallbackData}) async {
+    try {
+      await _tryRequest('/assignments/request_exercise/', method: 'POST', body: {
+        'patient_id': patientId,
+        'exercise_id': exerciseId,
+      });
+    } catch (_) {
+      if (localFallbackData != null) {
+        if (!localRequestedExercises.any((e) => e['id'] == localFallbackData['id'])) {
+          localRequestedExercises.add(localFallbackData);
+        }
+      }
+      throw Exception("Local mode");
+    }
+  }
+
+  static Future<void> cancelExerciseRequest(int patientId, int exerciseId) async {
+    try {
+      final response = await _tryRequest('/assignments/?patient_id=$patientId');
+      List<dynamic> all = json.decode(response.body);
+      final assignment = all.firstWhere((a) => a['exercise'] == exerciseId && a['status'] == 'PENDING', orElse: () => null);
+      if (assignment != null) {
+        await _tryRequest('/assignments/${assignment['id']}/', method: 'DELETE');
+      }
+    } catch (e) {
+      localRequestedExercises.removeWhere((ex) => ex['id'] == exerciseId);
+    }
   }
 
   static Future<List<dynamic>> getAllRequests() async {

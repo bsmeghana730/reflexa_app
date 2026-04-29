@@ -6,6 +6,7 @@ import 'package:reflexa_app/core/services/api_service.dart';
 import 'package:reflexa_app/features/therapy/presentation/event_driven_exercise_page.dart';
 import 'package:reflexa_app/core/services/bluetooth_service.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
+import 'package:reflexa_app/features/therapy/presentation/requested_exercises_screen.dart';
 
 class ExerciseDetailScreen extends StatefulWidget {
   final Map<String, dynamic> exercise;
@@ -47,13 +48,25 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
 
     try {
       if (exerciseId > 0) {
-        await ApiService.requestExercise(patientId, exerciseId);
+        await ApiService.requestExercise(
+          patientId, 
+          exerciseId, 
+          localFallbackData: widget.exercise
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("Request sent for ${widget.exercise['name']}!"),
               backgroundColor: const Color(0xFF00A78E),
             ),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RequestedExercisesScreen(
+                onBack: () => Navigator.pop(context)
+              )
+            )
           );
         }
       } else {
@@ -62,7 +75,18 @@ class _ExerciseDetailScreenState extends State<ExerciseDetailScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to send request. Using local mode.")),
+          SnackBar(
+            content: Text("Request sent for ${widget.exercise['name']}! (Local mode)"),
+            backgroundColor: const Color(0xFF00A78E),
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RequestedExercisesScreen(
+              onBack: () => Navigator.pop(context)
+            )
+          )
         );
       }
     }

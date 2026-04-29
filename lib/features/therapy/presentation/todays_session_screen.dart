@@ -21,8 +21,11 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
   final bleService = AppBluetoothService();
   bool _isConnected = false;
   StreamSubscription? _bleSub;
-  List<Map<String, dynamic>> _assignments = [];
+  List<Map<String, dynamic>> _allAssignments = [];
+  List<Map<String, dynamic>> _filteredAssignments = [];
   bool _isLoading = true;
+  String searchQuery = "";
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -43,7 +46,6 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
   Future<void> _fetchAssignments() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
-    print("Fetching assignments for user: ${widget.userId}");
     
     try {
       final data = await ApiService.getPatientAssignments(widget.userId)
@@ -51,26 +53,34 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
       
       if (mounted) {
         setState(() {
-          _assignments = (data as List).map((a) => Map<String, dynamic>.from(a)).where((a) => a['status'] == 'ASSIGNED').toList();
+          _allAssignments = (data as List)
+              .map((a) => Map<String, dynamic>.from(a))
+              .where((a) => a['status'] == 'ASSIGNED' || a['status'] == 'COMPLETED')
+              .toList();
+          _applyFilters();
           _isLoading = false;
         });
-        print("Loaded ${_assignments.length} assignments.");
       }
     } catch (e) {
-      print("Error fetching assignments: $e");
       if (mounted) {
         setState(() {
-          // Fallback to local if server fails
-          _assignments = List<Map<String, dynamic>>.from(ApiService.localAssignments)
-              .where((a) => a['status'] == 'ASSIGNED')
+          _allAssignments = List<Map<String, dynamic>>.from(ApiService.localAssignments)
+              .where((a) => a['status'] == 'ASSIGNED' || a['status'] == 'COMPLETED')
               .toList();
+          _applyFilters();
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cloud sync slow. Showing local tasks.")),
-        );
       }
     }
+  }
+
+  void _applyFilters() {
+    setState(() {
+      _filteredAssignments = _allAssignments.where((a) {
+        final name = (a['exercise_name'] ?? '').toString().toLowerCase();
+        return name.contains(searchQuery.toLowerCase());
+      }).toList();
+    });
   }
 
   void _showPairingSheet({VoidCallback? onSuccess}) {
@@ -164,7 +174,10 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
           targetRange: assignment['target_range'] ?? "20-40",
         ),
       ),
-    );
+    ).then((_) {
+      // Re-fetch in case it was completed
+      _fetchAssignments();
+    });
   }
 
   @override
@@ -174,39 +187,15 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _buildBetterHeader(),
+            _buildHeader(),
+            _buildSearchBar(),
             Expanded(
               child: _isLoading 
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF006C55)))
                 : RefreshIndicator(
                     onRefresh: _fetchAssignments,
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildProgressCard(),
-                          const SizedBox(height: 32),
-                          Text(
-                            "Assigned by Therapist",
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF191C1B),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          if (_assignments.isEmpty)
-                            _buildEmptyState()
-                          else
-                            ..._assignments.asMap().entries.map((entry) {
-                              return _assignmentCard(entry.value, entry.key);
-                            }).toList(),
-                          const SizedBox(height: 40),
-                        ],
-                      ),
-                    ),
+                    color: const Color(0xFF006C55),
+                    child: _buildList(),
                   ),
             ),
           ],
@@ -215,35 +204,14 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.assignment_turned_in_outlined, size: 48, color: Colors.grey.shade300),
-          const SizedBox(height: 16),
-          Text("No exercises assigned yet", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.bold, color: Colors.grey.shade500)),
-          const SizedBox(height: 8),
-          Text("Sent a request from the portal", style: GoogleFonts.manrope(fontSize: 13, color: Colors.grey.shade400)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBetterHeader() {
+  Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(8, 8, 16, 4),
       child: Row(
         children: [
           IconButton(
             onPressed: widget.onBack,
-            icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF191C1B), size: 20),
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF191C1B), size: 28),
           ),
           Expanded(
             child: Text(
@@ -256,6 +224,7 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
               ),
             ),
           ),
+          // Bluetooth status instead of empty space
           Stack(
             children: [
               IconButton(
@@ -276,92 +245,209 @@ class _TodaysSessionScreenState extends State<TodaysSessionScreen> {
     );
   }
 
-  Widget _buildProgressCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF006C55), Color(0xFF00A78E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F9),
+          borderRadius: BorderRadius.circular(24),
         ),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFF006C55).withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Your Recovery", style: GoogleFonts.plusJakartaSans(color: Colors.white.withOpacity(0.8), fontSize: 13, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Text("Let's hit your goals!", style: GoogleFonts.plusJakartaSans(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
-              ],
+        child: Row(
+          children: [
+            Icon(Icons.search, color: Colors.grey.shade400, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  searchQuery = val;
+                  _applyFilters();
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search exercises...',
+                  hintStyle: GoogleFonts.manrope(color: Colors.grey.shade400, fontSize: 15),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                style: GoogleFonts.manrope(fontSize: 15, color: const Color(0xFF191C1B)),
+              ),
             ),
+            Icon(Icons.search, color: const Color(0xFF00A78E), size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildList() {
+    if (_filteredAssignments.isEmpty) {
+      return CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverFillRemaining(
+            child: _buildEmptyState(),
           ),
-          _isConnected 
-            ? const Icon(Icons.check_circle, color: Colors.white, size: 32)
-            : IconButton(onPressed: () => _showPairingSheet(), icon: const Icon(Icons.bluetooth, color: Colors.white, size: 32))
+        ],
+      );
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: _filteredAssignments.length,
+      itemBuilder: (context, index) {
+        return _assignmentCard(_filteredAssignments[index], index);
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.assignment_turned_in_outlined, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(
+            "No exercises for today!", 
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 18, 
+              fontWeight: FontWeight.w800, 
+              color: Colors.grey.shade600
+            )
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "You have completed everything.", 
+            style: GoogleFonts.manrope(
+              fontSize: 14, 
+              color: Colors.grey.shade500
+            )
+          ),
         ],
       ),
     );
   }
 
   Widget _assignmentCard(Map<String, dynamic> assignment, int index) {
+    final lowerName = (assignment['exercise_name'] ?? '').toString().toLowerCase();
+    String imgUrl = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&q=80&w=400";
+    bool isAsset = false;
+
+    if (lowerName.contains("leg raise")) {
+      isAsset = true;
+      imgUrl = "assets/exercises/leg_raise.jpg";
+    } else if (lowerName.contains("knee")) {
+      isAsset = true;
+      imgUrl = "assets/exercises/knee_extension.jpg";
+    } else if (lowerName.contains("squat") && lowerName.contains("wall")) {
+      isAsset = true;
+      imgUrl = "assets/exercises/wall_squat.jpg";
+    } else if (lowerName.contains("squat")) {
+      isAsset = true;
+      imgUrl = "assets/exercises/wall_squat.jpg"; // Mock for mini squat
+    } else if (lowerName.contains("stretch") || lowerName.contains("hold")) {
+      isAsset = true;
+      imgUrl = lowerName.contains("plank") ? "assets/exercises/plank_hold.jpg" : "assets/exercises/stretch_hold.jpg";
+    } else if (lowerName.contains("bridge")) {
+      isAsset = true;
+      imgUrl = "assets/exercises/bridge_lift.jpg";
+    }
+
+    final category = lowerName.contains("plank") || lowerName.contains("bridge") ? "Core" : "Lower limb Exercise";
+    final isCompleted = assignment['status'] == 'COMPLETED';
+
     return FadeInUp(
       duration: const Duration(milliseconds: 400),
-      delay: Duration(milliseconds: 80 * index),
+      delay: Duration(milliseconds: 50 * index),
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFE8E8E8)),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(color: const Color(0xFFF1F6F5), borderRadius: BorderRadius.circular(16)),
-                child: const Icon(Icons.fitness_center, color: Color(0xFF006C55), size: 28),
+        child: Row(
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                width: 64,
+                height: 64,
+                color: Colors.grey.shade200,
+                child: isAsset
+                    ? Image.asset(imgUrl, fit: BoxFit.cover, errorBuilder: (c,e,s) => const Icon(Icons.fitness_center))
+                    : Image.network(imgUrl, fit: BoxFit.cover, errorBuilder: (c,e,s) => const Icon(Icons.fitness_center)),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      assignment['exercise_name'] ?? 'Exercise',
-                      style: GoogleFonts.plusJakartaSans(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF1A1A1A)),
+            ),
+            const SizedBox(width: 16),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    assignment['exercise_name'] ?? 'Exercise',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF191C1B),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "${assignment['reps']} reps • ${assignment['difficulty'] ?? 'Standard'}",
-                      style: GoogleFonts.manrope(fontSize: 13, color: const Color(0xFF888888), fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isCompleted ? "Completed" : "$category • ${assignment['reps']} reps",
+                    style: GoogleFonts.manrope(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isCompleted ? const Color(0xFF00A78E) : Colors.grey.shade500,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              ElevatedButton(
-                onPressed: () => _startExercise(assignment),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF006C55),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-                child: Text("Start", style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 13)),
-              ),
-            ],
-          ),
+            ),
+            // Start Button or Checkmark
+            isCompleted
+                ? Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFEFFBF5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.check_circle, color: Color(0xFF00C09E), size: 28),
+                  )
+                : InkWell(
+                    onTap: () => _startExercise(assignment),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF88DAB2), Color(0xFFA5DFBB)],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        "Start Session",
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+          ],
         ),
       ),
     );
