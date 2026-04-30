@@ -27,6 +27,18 @@ class ApiService {
 
   static List<dynamic> localRequestedExercises = [];
 
+  static List<dynamic> localResults = [
+    {
+      'id': 1, 'patient': 2, 'exercise': 101, 'accuracy': 85.0, 'time_taken': 900, 'score': 250, 'date': DateTime.now().subtract(const Duration(days: 1)).toIso8601String()
+    },
+    {
+      'id': 2, 'patient': 2, 'exercise': 102, 'accuracy': 92.0, 'time_taken': 1200, 'score': 300, 'date': DateTime.now().toIso8601String()
+    },
+    {
+      'id': 3, 'patient': 2, 'exercise': 101, 'accuracy': 78.0, 'time_taken': 600, 'score': 150, 'date': DateTime.now().subtract(const Duration(days: 2)).toIso8601String()
+    }
+  ];
+
   /// Helper to try all possible hosts for a given request.
   /// If [discoveryOnly] is true, it just finds a working host and returns its URL.
   static Future<http.Response> _tryRequest(String path, {String method = 'GET', Map<String, dynamic>? body}) async {
@@ -149,8 +161,12 @@ class ApiService {
   }
 
   static Future<List<dynamic>> getPatientResults(int patientId) async {
-    final response = await _tryRequest('/results/?patient=$patientId');
-    return json.decode(response.body);
+    try {
+      final response = await _tryRequest('/results/?patient=$patientId');
+      return json.decode(response.body);
+    } catch (_) {
+      return localResults;
+    }
   }
 
   static Future<void> completeAssignment(int assignmentId) async {

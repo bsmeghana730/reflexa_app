@@ -46,7 +46,7 @@ dependencies:
   google_fonts: ^6.3.2
   animate_do: ^4.2.0
   intl: ^0.19.0
-  audioplayers: ^6.6.0
+  just_audio: ^0.9.36
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +86,10 @@ flutter:
     - assets/exercises/stretch_hold.jpg
     - assets/exercises/plank_hold.jpg
     - assets/exercises/bridge_lift.jpg
+    - assets/audio/ocean.ogg
+    - assets/audio/sleep.ogg
+    - assets/audio/forest.ogg
+    - assets/audio/ambient.ogg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -3,85 +3,59 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:reflexa_app/features/wellness/presentation/meditation_session_page.dart';
 
-class MeditationScreen extends StatelessWidget {
+class MeditationScreen extends StatefulWidget {
   final VoidCallback onBack;
 
   const MeditationScreen({super.key, required this.onBack});
 
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> sessions = [
-      {
-        'title': 'Zen Garden', 
-        'duration': '15 min', 
-        'icon': Icons.spa_rounded, 
-        'color': const Color(0xFF6750A4), 
-        'bg': const Color(0xFFF3F0FF),
-        'audio': 'https://www.soundescape.com/samples/zen-meditation-ambient.mp3',
-      },
-      {
-        'title': 'Ocean Breath', 
-        'duration': '10 min', 
-        'icon': Icons.waves_rounded, 
-        'color': const Color(0xFF0061A4), 
-        'bg': const Color(0xFFE1F0FF),
-        'audio': 'https://www.soundescape.com/samples/ocean-waves-calm.mp3',
-      },
-      {
-        'title': 'Forest Healer', 
-        'duration': '12 min', 
-        'icon': Icons.park_rounded, 
-        'color': const Color(0xFF006C55), 
-        'bg': const Color(0xFFE6F3F0),
-        'audio': 'https://www.soundescape.com/samples/forest-birds-ambient.mp3',
-      },
-      {
-        'title': 'Deep Sleep', 
-        'duration': '30 min', 
-        'icon': Icons.dark_mode_rounded, 
-        'color': const Color(0xFF4355B9), 
-        'bg': const Color(0xFFF0F2FF),
-        'audio': 'https://www.soundescape.com/samples/deep-sleep-delta.mp3',
-      },
-      {
-        'title': 'Starlight Focus', 
-        'duration': '8 min', 
-        'icon': Icons.auto_awesome_rounded, 
-        'color': const Color(0xFF7D5900), 
-        'bg': const Color(0xFFFFF1D5),
-        'audio': 'https://www.soundescape.com/samples/starlight-ambient.mp3',
-      },
-      {
-        'title': 'Mountain Peace', 
-        'duration': '20 min', 
-        'icon': Icons.terrain_rounded, 
-        'color': const Color(0xFF49454F), 
-        'bg': const Color(0xFFF5F5F5),
-        'audio': 'https://www.soundescape.com/samples/mountain-wind-peace.mp3',
-      },
-    ];
+  State<MeditationScreen> createState() => _MeditationScreenState();
+}
 
+class _MeditationScreenState extends State<MeditationScreen> {
+  final Color primaryColor = const Color(0xFF2F7D6D);
+  final Color bgColor = const Color(0xFFF9FAFB);
+  final Color secondaryText = const Color(0xFF6B7280);
+
+  final List<Map<String, dynamic>> _relaxSessions = [
+    {'title': 'Breathing Reset', 'duration': '5 min', 'icon': Icons.air_rounded},
+    {'title': 'Focus Booster', 'duration': '8 min', 'icon': Icons.center_focus_strong_rounded},
+    {'title': 'Stress Release', 'duration': '10 min', 'icon': Icons.spa_rounded},
+    {'title': 'Morning Energy', 'duration': '6 min', 'icon': Icons.wb_sunny_rounded},
+  ];
+
+  final List<Map<String, dynamic>> _sleepSessions = [
+    {'title': 'Deep Sleep Relaxation', 'duration': '20 min', 'icon': Icons.nights_stay_rounded},
+    {'title': 'Night Calm', 'duration': '10 min', 'icon': Icons.bedtime_rounded},
+  ];
+
+  final List<Map<String, dynamic>> _recoverySessions = [
+    {'title': 'Ocean Breath', 'duration': '10 min', 'icon': Icons.water_rounded},
+    {'title': 'Forest Healing', 'duration': '12 min', 'icon': Icons.park_rounded},
+    {'title': 'Body Awareness', 'duration': '15 min', 'icon': Icons.accessibility_new_rounded},
+    {'title': 'Positive Mindset', 'duration': '7 min', 'icon': Icons.sentiment_very_satisfied_rounded},
+  ];
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFBFF),
+      backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          onPressed: onBack,
+          onPressed: widget.onBack,
           icon: const Icon(Icons.arrow_back_ios_new, color: Color(0xFF1D1B20), size: 20),
         ),
         title: Text(
-          "The Sanctuary", 
+          "Meditation",
           style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w800, 
-            fontSize: 18, 
-            color: const Color(0xFF1D1B20)
-          )
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: const Color(0xFF1D1B20),
+          ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.favorite_border, color: Color(0xFF1D1B20))),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -92,35 +66,16 @@ class MeditationScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 12),
-                FadeInDown(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Meditation",
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 32, 
-                          fontWeight: FontWeight.w800, 
-                          color: const Color(0xFF1D1B20)
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Reconnect with your inner self",
-                        style: GoogleFonts.manrope(
-                          fontSize: 15, 
-                          color: Colors.grey.shade600, 
-                          fontWeight: FontWeight.w500
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                FadeInDown(child: _buildMindStatus()),
                 const SizedBox(height: 32),
-                _buildGrid(context, sessions),
+                FadeInUp(delay: const Duration(milliseconds: 100), child: _buildRecommended()),
                 const SizedBox(height: 32),
-                _quoteCard(),
-                const SizedBox(height: 32),
+                FadeInUp(delay: const Duration(milliseconds: 200), child: _buildCategoryList("Relax", _relaxSessions)),
+                const SizedBox(height: 24),
+                FadeInUp(delay: const Duration(milliseconds: 300), child: _buildCategoryList("Sleep", _sleepSessions)),
+                const SizedBox(height: 24),
+                FadeInUp(delay: const Duration(milliseconds: 400), child: _buildCategoryList("Recovery", _recoverySessions)),
+                const SizedBox(height: 40),
               ],
             ),
           ),
@@ -129,131 +84,259 @@ class MeditationScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGrid(BuildContext context, List<Map<String, dynamic>> sessions) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 0.9,
-      ),
-      itemCount: sessions.length,
-      itemBuilder: (context, index) {
-        final s = sessions[index];
-        return FadeInUp(
-          delay: Duration(milliseconds: 50 * index),
-          child: _meditationCard(context, s),
-        );
-      },
+  Widget _buildMindStatus() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Your Mind Today",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF1D1B20),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.self_improvement_rounded, color: primaryColor, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Moderate",
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1D1B20),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "A short breathing exercise could help clear your thoughts.",
+                      style: GoogleFonts.manrope(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _meditationCard(BuildContext context, Map<String, dynamic> s) {
+  Widget _buildRecommended() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Recommended Session",
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1D1B20),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.air_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "5 min",
+                    style: GoogleFonts.manrope(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Breathing Reset",
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "A quick reset to calm your nervous system and regain focus.",
+                style: GoogleFonts.manrope(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const MeditationPlayerPage(
+                          title: "Breathing Reset",
+                          durationMinutes: 5,
+                        ),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: primaryColor,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    "Start Now",
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryList(String category, List<Map<String, dynamic>> sessions) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          category,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF1D1B20),
+          ),
+        ),
+        const SizedBox(height: 16),
+        ...sessions.map((session) => _buildSessionItem(session)),
+      ],
+    );
+  }
+
+  Widget _buildSessionItem(Map<String, dynamic> session) {
     return GestureDetector(
       onTap: () {
+        int minutes = int.tryParse(session['duration'].split(' ')[0]) ?? 5;
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => MeditationSessionPage(
-              title: s['title'],
-              audioUrl: s['audio'],
+            builder: (_) => MeditationPlayerPage(
+              title: session['title'],
+              durationMinutes: minutes,
             ),
           ),
         );
       },
       child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(color: const Color(0xFFF5F5F5)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: s['bg'],
-                borderRadius: BorderRadius.circular(14),
+                color: const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(s['icon'], color: s['color'], size: 24),
+              child: Icon(session['icon'], color: primaryColor, size: 20),
             ),
-            const Spacer(),
-            Text(
-              s['title'], 
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15, 
-                fontWeight: FontWeight.w800, 
-                color: const Color(0xFF1D1B20)
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    session['title'],
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1D1B20),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    session['duration'],
+                    style: GoogleFonts.manrope(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: secondaryText,
+                    ),
+                  ),
+                ],
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  s['duration'], 
-                  style: GoogleFonts.manrope(
-                    fontSize: 12, 
-                    color: Colors.grey.shade500, 
-                    fontWeight: FontWeight.w600
-                  )
-                ),
-                Icon(Icons.play_circle_fill, color: s['color'].withOpacity(0.7), size: 22),
-              ],
-            ),
+            Icon(Icons.play_circle_fill_rounded, color: primaryColor, size: 32),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _quoteCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F0FF),
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.format_quote_rounded, color: const Color(0xFF6750A4).withOpacity(0.5), size: 40),
-          const SizedBox(height: 8),
-          Text(
-            "\"Quiet the mind, and the soul will speak.\"",
-            textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18, 
-              fontWeight: FontWeight.w700, 
-              color: const Color(0xFF21005D),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            "MA JAYA SATI BHAGAVATI",
-            style: GoogleFonts.manrope(
-              fontSize: 10, 
-              fontWeight: FontWeight.w800, 
-              letterSpacing: 1.2, 
-              color: const Color(0xFF21005D).withOpacity(0.6)
-            ),
-          ),
-        ],
       ),
     );
   }

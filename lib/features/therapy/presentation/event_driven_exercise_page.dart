@@ -79,7 +79,7 @@ class _EventDrivenExercisePageState extends State<EventDrivenExercisePage> {
 
   Future<void> _reconfigureAndStart() async {
     if (_bluetoothService.isConnected) {
-      await _bluetoothService.configureExercise(widget.exerciseName, "medium", widget.reps);
+      await _bluetoothService.configureExercise("stop", "medium", 0);
     }
   }
 
@@ -189,7 +189,7 @@ class _EventDrivenExercisePageState extends State<EventDrivenExercisePage> {
     final instruction = widget.instructions[_currentStepIndex % widget.instructions.length];
     final lowerText = instruction.toLowerCase();
     
-    bool isAction = lowerText.contains("lift") || lowerText.contains("raise") || lowerText.contains("hold");
+    bool isAction = lowerText.contains("lift") || lowerText.contains("raise") || lowerText.contains("hold") || lowerText.contains("down") || lowerText.contains("bend");
 
     if (mounted) {
       setState(() {
@@ -197,6 +197,17 @@ class _EventDrivenExercisePageState extends State<EventDrivenExercisePage> {
         _feedbackText = instruction;
       });
     }
+
+    if (isAction) {
+      if (_bluetoothService.isConnected) {
+        await _bluetoothService.configureExercise(widget.exerciseName, "medium", widget.reps);
+      }
+    } else {
+      if (_bluetoothService.isConnected) {
+        await _bluetoothService.configureExercise("stop", "medium", 0);
+      }
+    }
+
     await _speak(instruction);
 
     await _wait(3);

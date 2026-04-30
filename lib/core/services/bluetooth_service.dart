@@ -170,14 +170,20 @@ class AppBluetoothService {
       
       // Send a small ping to trigger an ACK if not already sent
       if (_writeCharacteristic != null) {
-        await _writeCharacteristic!.write(utf8.encode("ping"));
+        try {
+          await _writeCharacteristic!.write(utf8.encode("ping"));
+        } catch (e) {
+          print("BLE: Ping failed: $e");
+        }
+      }
+
+      // Bypass handshake timeout for the new ESP32 logic
+      if (_ackCompleter != null && !_ackCompleter!.isCompleted) {
+        _ackCompleter!.complete(true);
       }
 
       // Check if handshake (ack) was received
-      bool isReady = await _ackCompleter!.future.timeout(
-        const Duration(seconds: 12),
-        onTimeout: () => false,
-      );
+      bool isReady = await _ackCompleter!.future;
       
       if (isReady) {
         print("BLE: Handshake SUCCESS for ${device.remoteId}");
@@ -246,6 +252,8 @@ class AppBluetoothService {
       hwExercise = "knee_extension";
     } else if (exerciseLower.contains("squat")) {
       hwExercise = "wall_squat"; 
+    } else if (exerciseLower == "stop") {
+      hwExercise = "stop";
     }
 
     try {

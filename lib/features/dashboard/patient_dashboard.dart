@@ -12,6 +12,7 @@ import 'package:reflexa_app/features/therapy/presentation/exercise_list_screen.d
 import 'package:reflexa_app/features/therapy/presentation/todays_session_screen.dart';
 import 'package:reflexa_app/features/nutrition/presentation/meal_plan_screen.dart';
 import 'package:reflexa_app/features/progress/presentation/patient_progress_screen.dart';
+import 'package:reflexa_app/features/progress/presentation/session_history_screen.dart';
 import 'package:reflexa_app/features/therapy/presentation/therapist_list_screen.dart';
 import 'package:reflexa_app/features/wellness/presentation/meditation_screen.dart';
 import 'package:reflexa_app/core/services/bluetooth_service.dart';
@@ -285,13 +286,13 @@ class _PatientDashboardState extends State<PatientDashboard> {
             imageUrl: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800",
             onPressed: () => setState(() => _selectedIndex = 2),
           ),
-          _bannerItem(
-            title: "Meditation",
-            subtitle: "Relax your mind",
-            buttonText: "Start Meditation",
-            imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800",
-            onPressed: () => setState(() => _selectedIndex = 5),
-          ),
+          // _bannerItem(
+          //   title: "Meditation",
+          //   subtitle: "Relax your mind",
+          //   buttonText: "Start Meditation",
+          //   imageUrl: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=800",
+          //   onPressed: () => setState(() => _selectedIndex = 5),
+          // ),
           _bannerItem(
             title: "Progress",
             subtitle: "Track your recovery",
@@ -299,19 +300,19 @@ class _PatientDashboardState extends State<PatientDashboard> {
             imageUrl: "https://images.unsplash.com/photo-1543286386-713bdd548da4?auto=format&fit=crop&q=80&w=800",
             onPressed: () => setState(() => _selectedIndex = 3),
           ),
-          _bannerItem(
-            title: "Eat Healthy",
-            subtitle: "Nutrition tips and meals",
-            buttonText: "View Meals",
-            imageUrl: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800",
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MealPlanScreen(onBack: () => Navigator.pop(context)))),
-          ),
+          // _bannerItem(
+          //   title: "Eat Healthy",
+          //   subtitle: "Nutrition tips and meals",
+          //   buttonText: "View Meals",
+          //   imageUrl: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=800",
+          //   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => MealPlanScreen(onBack: () => Navigator.pop(context)))),
+          // ),
           _bannerItem(
             title: "Session History",
             subtitle: "Review past sessions",
             buttonText: "View History",
             imageUrl: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&q=80&w=800",
-            onPressed: () => setState(() => _selectedIndex = 3),
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SessionHistoryScreen())),
           ),
         ],
       ),
@@ -368,7 +369,7 @@ class _PatientDashboardState extends State<PatientDashboard> {
   Widget _buildDotIndicators() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center, 
-      children: List.generate(6, (index) => AnimatedContainer(
+      children: List.generate(4, (index) => AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         width: _carouselIndex == index ? 24 : 6, 
         height: 6, 
@@ -397,7 +398,17 @@ class _PatientDashboardState extends State<PatientDashboard> {
           if (snapshot.connectionState == ConnectionState.waiting) return const SizedBox.shrink();
 
           final connections = snapshot.data?.docs ?? [];
-          final acceptedConn = connections.firstWhere((doc) => (doc.data() as Map<String, dynamic>)['status'] == 'accepted', orElse: () => connections.isNotEmpty ? connections.first : null as dynamic);
+          
+          QueryDocumentSnapshot? acceptedConn;
+          for (var doc in connections) {
+            if ((doc.data() as Map<String, dynamic>)['status'] == 'accepted') {
+              acceptedConn = doc;
+              break;
+            }
+          }
+          if (acceptedConn == null && connections.isNotEmpty) {
+            acceptedConn = connections.first;
+          }
 
           if (acceptedConn == null) {
             return _buildNoTherapistCard();
@@ -530,18 +541,18 @@ class _PatientDashboardState extends State<PatientDashboard> {
             "https://lh3.googleusercontent.com/aida-public/AB6AXuBpG63oH3c_ZLlHONjj12JSRZZpEndSMV_em4uzWpnSBvMlhPv0MkLFXp_LkSvJusci67tBN8aXuxs8TEaqgKyrQ4PE4s054v_J-sPB_XExxoR0jMmZgMrko2dE_gp0Al_DeNpI617NbEl5VhDyMN96ulnPHtsLEj-oA0ZY94ieYqzoVLqDUvoxRnJiz7ehKOxoMp7jbouOPCwwOqUNBJ8vlgULrs5drYmIBOBDLiwhl7DgTuAKLLU-rSazbBNdjvVNd1PeO7t59i6k", 
             () => setState(() => _selectedIndex = 2),
           ),
-          _featureCard("Meditation", "Relax and clear your mind", const Color(0xFFF5F3FF), "https://lh3.googleusercontent.com/aida-public/AB6AXuCPqQB8oKxSI16_GbknftIeQfvwl47OLEFn_8vTL7wenqTncQ5Q5yA8RiUehOH90L560455jEEbC3t_rpVRKOYgZg6qrlNpR-dHemof6aF3S_LqbN8Ntj9unUEd6hyImYIKRqHtjWP1FNdxN-0VQIOO5hTBH3JxnduPSIOxMxg7t5cW_-LxkVxmzrQSsTc2xSWqrk9gepQ0LBcpjG8aGWBYrXXp-CznjWwixOLFyVJYu0KuWW-FkhAJ1lvKUI0zUVCURNYnxubVu0-F", () {
-            setState(() => _selectedIndex = 5);
-          }),
+          // _featureCard("Meditation", "Relax and clear your mind", const Color(0xFFF5F3FF), "https://lh3.googleusercontent.com/aida-public/AB6AXuCPqQB8oKxSI16_GbknftIeQfvwl47OLEFn_8vTL7wenqTncQ5Q5yA8RiUehOH90L560455jEEbC3t_rpVRKOYgZg6qrlNpR-dHemof6aF3S_LqbN8Ntj9unUEd6hyImYIKRqHtjWP1FNdxN-0VQIOO5hTBH3JxnduPSIOxMxg7t5cW_-LxkVxmzrQSsTc2xSWqrk9gepQ0LBcpjG8aGWBYrXXp-CznjWwixOLFyVJYu0KuWW-FkhAJ1lvKUI0zUVCURNYnxubVu0-F", () {
+          //   setState(() => _selectedIndex = 5);
+          // }),
           _featureCard("Progress", "Track your recovery", const Color(0xFFF0F7FF), "https://lh3.googleusercontent.com/aida-public/AB6AXuDyF5quRTjh7mQc6VlQzwWgDNr7Nt-n6f1xWgrZSVplE59mVdu4UvdcRTPWKhhkOR9URFfX1mrvH96NHm-y4--ILib4esCw5JbIp_v3edW7k3ou92n6cLnDOiGnExXHM2WYsPEqfXjlO-aKQoh_yNdDq8uvxW_h17n3x2bn9AOfgmrc0BrNpCfvW0aXvnQj9qdwC_9eFz3w5-ApkLoEy_GCk9tZRATv0WUdQHO-m58npQp68I2iIkpwUkIFlmeQJozHiGAVjycvRNwS", () {
             setState(() => _selectedIndex = 3);
           }),
           _featureCard("Session History", "Review past sessions", const Color(0xFFFFF4F0), "https://lh3.googleusercontent.com/aida-public/AB6AXuC7ieLyfykWH5r0r7S1Np9aRL_n-RodomUYztLWYUDfj-jYlcs-uytxq2MQT-tf4fKgFo_9jxebcnsH99q6KvuS-VPReZWJjIUWMcnqrECkwt5UvBiKcQs6Kv68lvgmLdICJx-sbyLz8mm3K4aS5kGMQZUYBvy5xsMZGZmkN6urEHgJXnKRXaCZmC9gt9f2g3wSUb9epvB51ICUsV5_RevVFJNNha1qOjdV0paxmsspvP0oFEP5qvBYSMxxVCveXGLcsGsGxK66KA8U", () {
-            setState(() => _selectedIndex = 3);
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const SessionHistoryScreen()));
           }),
-          _featureCard("Eat Healthy", "Nutrition tips and recipes", const Color(0xFFF2FAF6), "https://lh3.googleusercontent.com/aida-public/AB6AXuDwTs6tnRUmdnO37IfpLgRGVCh4iLFIbsPlEKuTUuf9fnSzSq0OJNGKZl7KgCzRotenPK-YC-0DxwVIJB_0cO3jDcxDSPYUSk57dxbVn6sHNUQOrC6czlMHEBtl618XFrHVxe3SeBH1H0Fi6MyhTofVmsRQ-_unrdcTyRJ3Knle6vgXfKKe8crkWGZXeuwAhZM9tGwszJDs65NOmjHL4tG5UZocWYEiS42DGqFrcujTaaw1_w037B3R1uDta2Dz6qzaOIkssmSQnKdX", () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => MealPlanScreen(onBack: () => Navigator.pop(context))));
-          }),
+          // _featureCard("Eat Healthy", "Nutrition tips and recipes", const Color(0xFFF2FAF6), "https://lh3.googleusercontent.com/aida-public/AB6AXuDwTs6tnRUmdnO37IfpLgRGVCh4iLFIbsPlEKuTUuf9fnSzSq0OJNGKZl7KgCzRotenPK-YC-0DxwVIJB_0cO3jDcxDSPYUSk57dxbVn6sHNUQOrC6czlMHEBtl618XFrHVxe3SeBH1H0Fi6MyhTofVmsRQ-_unrdcTyRJ3Knle6vgXfKKe8crkWGZXeuwAhZM9tGwszJDs65NOmjHL4tG5UZocWYEiS42DGqFrcujTaaw1_w037B3R1uDta2Dz6qzaOIkssmSQnKdX", () {
+          //   Navigator.push(context, MaterialPageRoute(builder: (_) => MealPlanScreen(onBack: () => Navigator.pop(context))));
+          // }),
         ],
       ),
     );
